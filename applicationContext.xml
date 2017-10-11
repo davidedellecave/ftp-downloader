@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<!-- =========================== -->
+	<!-- Ftp Server -->
+	<!-- =========================== -->
+
+	<bean id="server-spartaco" class="ddc.ftp.FtpServer">
+		<property name="host" value="5.134.124.246" />
+		<property name="port" value="21" />
+		<property name="username" value="#{systemEnvironment['spartaco.username']}" />
+		<property name="password" value="#{systemEnvironment['spartaco.password']}" />
+	</bean>
+
+	<bean id="server-gottardo" class="ddc.ftp.FtpServer">
+		<property name="host" value="5.134.124.246" />
+		<property name="port" value="21" />
+		<property name="username" value="#{systemEnvironment['gottardo.username']}" />
+		<property name="password" value="#{systemEnvironment['gottardo.password']}" />
+	</bean>
+
+	<!-- =========================== -->
+	<!-- Remote Path -->
+	<!-- =========================== -->
+
+	<bean id="remotePath-log" class="ddc.ftp.downloader.console.RemotePath">
+		<property name="path" value="/" />
+		<property name="recursive" value="true" />
+		<property name="fileSelector">
+			<bean class="ddc.ftp.matcher.AndMatcher">
+				<constructor-arg>
+					<bean class="ddc.ftp.matcher.RelativeDateMatcher">
+						<!-- Set the relative range date from now, for example "7 days from 
+							now", "0 days from now" -->
+						<!-- -3 DAYS, -3 HOURS means 3 days from now TO 3 hours from now -->
+						<!-- Valid unit are: DAYS, MINUTES, HOURS, MILLISECONDS -->
+						<constructor-arg value="-365 DAYS, -1 DAYS" />
+					</bean>
+				</constructor-arg>
+				<constructor-arg>
+					<bean class="ddc.ftp.matcher.PathMatcher">
+						<constructor-arg value="/log/" />
+					</bean>					
+				</constructor-arg>
+			</bean>
+		</property>
+	</bean>
+
+	<bean id="remotePath-data" class="ddc.ftp.downloader.console.RemotePath">
+		<property name="path" value="/" />
+		<property name="recursive" value="true" />
+		<property name="fileSelector">
+			<bean class="ddc.ftp.matcher.AndMatcher">
+				<constructor-arg>
+					<bean class="ddc.ftp.matcher.RelativeDateMatcher">
+						<!-- Set the relative range date from now, for example "7 days from 
+							now", "0 days from now" -->
+						<!-- -3 DAYS, -3 HOURS means 3 days from now TO 3 hours from now -->
+						<!-- Valid unit are: DAYS, MINUTES, HOURS, MILLISECONDS -->
+						<constructor-arg value="-365 DAYS, 0 MINUTES" />
+					</bean>
+				</constructor-arg>
+				<constructor-arg>
+					<bean class="ddc.ftp.matcher.PathMatcher">
+						<constructor-arg value="/App_Data/" />
+					</bean>
+				</constructor-arg>
+			</bean>
+		</property>
+	</bean>
+
+	<!-- =========================== -->
+	<!-- Local Path -->
+	<!-- =========================== -->
+
+	<bean id="localPath-asphosting" class="ddc.ftp.downloader.console.LocalPath">
+		<property name="path" value="/Users/davide/ddc/backup/cms-data" />
+		<property name="includeHost" value="true" />
+		<property name="includeRemotePath" value="true" />
+		<property name="preserveRemoteTimestamp" value="true" />
+		<property name="skipFilIfEqSizeAndDate" value="true" />
+	</bean>
+
+	<!-- =========================== -->
+	<!-- Ftp Download Configuration -->
+	<!-- =========================== -->
+
+	<bean id="job-gottardo-log" class="ddc.ftp.downloader.console.DownloadConfig">
+		<!-- Remote Conf -->
+		<property name="maxConnection" value="6" />
+		<property name="testmode" value="true" />
+		<property name="testmodeOutpath" value="" />	
+		<property name="ftpConfig">
+			<bean class="ddc.ftp.FtpLiteConfig">
+				<property name="ftpServer" ref="server-gottardo" />
+				<property name="preserveRemoteTimestamp" value="true" />
+				<property name="binaryTransfer" value="true" />
+				<property name="passiveMode" value="true" />
+				<property name="overwriteLocal" value="true" />
+				<property name="overwriteRemote" value="true" />
+				<property name="deleteRemoteLogically" value="false" />
+				<property name="deleteRemoteAfterDownload" value="true" />
+				<property name="workingPath" value="/" />
+			</bean>
+		</property>
+		<property name="remotePath">
+			<list>
+				<ref bean="remotePath-log" />
+			</list>
+		</property>
+		<property name="deleteRemoteEmptyFolder" value="true"></property>
+		<!-- Local Conf -->
+		<property name="localPath" ref="localPath-asphosting" />
+	</bean>
+
+	<bean id="job-gottardo-data" class="ddc.ftp.downloader.console.DownloadConfig">
+		<!-- Remote Conf -->
+		<property name="maxConnection" value="6" />
+		<property name="testmode" value="true" />
+		<property name="testmodeOutpath" value="" />		
+		<property name="ftpConfig">
+			<bean class="ddc.ftp.FtpLiteConfig">
+				<property name="ftpServer" ref="server-gottardo" />
+				<property name="preserveRemoteTimestamp" value="true" />
+				<property name="binaryTransfer" value="true" />
+				<property name="passiveMode" value="true" />
+				<property name="overwriteLocal" value="true" />
+				<property name="overwriteRemote" value="true" />
+				<property name="deleteRemoteLogically" value="false" />
+				<property name="deleteRemoteAfterDownload" value="true" />
+				<property name="workingPath" value="/" />
+			</bean>
+		</property>
+		<property name="remotePath">
+			<list>
+				<ref bean="remotePath-data" />
+			</list>
+		</property>
+		<property name="deleteRemoteEmptyFolder" value="false"></property>
+		<!-- Local Conf -->
+		<property name="localPath" ref="localPath-asphosting" />
+	</bean>
+
+	<bean id="job-spartaco-log" class="ddc.ftp.downloader.console.DownloadConfig">
+		<!-- Remote Conf -->
+		<property name="maxConnection" value="6" />
+		<property name="testmode" value="true" />
+		<property name="testmodeOutpath" value="" />	
+		<property name="ftpConfig">
+			<bean class="ddc.ftp.FtpLiteConfig">
+				<property name="ftpServer" ref="server-spartaco" />
+				<property name="preserveRemoteTimestamp" value="true" />
+				<property name="binaryTransfer" value="true" />
+				<property name="passiveMode" value="true" />
+				<property name="overwriteLocal" value="true" />
+				<property name="overwriteRemote" value="true" />
+				<property name="deleteRemoteLogically" value="false" />
+				<property name="deleteRemoteAfterDownload" value="true" />
+				<property name="workingPath" value="/" />
+			</bean>
+		</property>
+		<property name="remotePath">
+			<list>
+				<ref bean="remotePath-log" />
+			</list>
+		</property>
+		<property name="deleteRemoteEmptyFolder" value="true"></property>
+		<!-- Local Conf -->
+		<property name="localPath" ref="localPath-asphosting" />
+	</bean>
+	
+	<bean id="job-spartaco-data" class="ddc.ftp.downloader.console.DownloadConfig">
+		<!-- Remote Conf -->
+		<property name="maxConnection" value="6" />
+		<property name="testmode" value="true" />
+		<property name="testmodeOutpath" value="" />
+		<property name="ftpConfig">
+			<bean class="ddc.ftp.FtpLiteConfig">
+				<property name="ftpServer" ref="server-spartaco" />
+				<property name="preserveRemoteTimestamp" value="true" />
+				<property name="binaryTransfer" value="true" />
+				<property name="passiveMode" value="true" />
+				<property name="overwriteLocal" value="true" />
+				<property name="overwriteRemote" value="true" />
+				<property name="deleteRemoteLogically" value="false" />
+				<property name="deleteRemoteAfterDownload" value="true" />
+				<property name="workingPath" value="/" />
+			</bean>
+		</property>
+		<property name="remotePath">
+			<list>
+				<ref bean="remotePath-data" />
+			</list>
+		</property>
+		<property name="deleteRemoteEmptyFolder" value="false"></property>
+		<!-- Local Conf -->
+		<property name="localPath" ref="localPath-asphosting" />
+	</bean>
+		
+	<!-- =========================== -->
+	<!-- Ftp Project Configuration -->
+	<!-- =========================== -->
+	<bean id="FtpDownloaderConfiguration" class="ddc.ftp.downloader.console.DownloadConfigList">
+		<property name="enableParallelExecution" value="true" />
+		<property name="confList">
+			<list>
+				<ref bean="job-gottardo-log" />
+				<ref bean="job-gottardo-data" />
+				<ref bean="job-spartaco-log" />
+				<ref bean="job-spartaco-data" />
+			</list>
+		</property>
+	</bean>
+</beans>
